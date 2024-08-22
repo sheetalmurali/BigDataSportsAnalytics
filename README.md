@@ -1,2 +1,3 @@
 # BigDataSportsAnalytics
-Cloud-Based Tools
+# Cloud-Based Tools
+In this project, we leveraged big data and cloud-based tools to analyze player performance and marketing strategies in International Cricket. The data pipeline architecture integrated both batch and stream processing using AWS services like Kinesis and Databricks, ensuring seamless data ingestion, processing, and storage. Batch processing involved ETL workflows from Amazon S3 to Databricks, with data stored in Delta tables for efficient retrieval in Power BI. For stream processing, real-time data was captured via Kinesis and processed in Databricks. The project also incorporated machine learning models in Azure to provide predictive analytics, with insights visualized through interactive Power BI dashboards.

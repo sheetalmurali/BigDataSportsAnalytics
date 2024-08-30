@@ -1,0 +1,50 @@
+// Databricks notebook source
+// === Configurations for Kinesis streams ===
+// If you are using IAM roles to connect to a Kinesis stream (recommended), you do not need to set the access key and the secret key
+val awsAccessKeyId = "ACCESS KEY TO S3 BUCKET"
+val awsSecretKey = "SECRET KEY TO S3 BUCKET"
+val kinesisStreamName = "cricketstream"
+val kinesisRegion = "us-west-2" // e.g., "us-west-2"
+
+// COMMAND ----------
+
+import com.amazonaws.services.kinesis.model.PutRecordRequest
+import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
+import java.nio.ByteBuffer
+import scala.util.Random
+
+// Verify that the Kinesis settings have been set
+require(!awsAccessKeyId.contains("YOUR"), "AWS Access Key has not been set")
+require(!awsSecretKey.contains("YOUR"), "AWS Access Secret Key has not been set")
+require(!kinesisStreamName.contains("YOUR"), "Kinesis stream has not been set")
+require(!kinesisRegion.contains("YOUR"), "Kinesis region has not been set")
+
+
+// COMMAND ----------
+
+// DBTITLE 1,Structured Streaming Query that reads words from Kinesis and counts them up
+val kinesis = spark.readStream
+  .format("kinesis")
+  .option("streamName", kinesisStreamName)
+  .option("region", kinesisRegion)
+  .option("initialPosition", "TRIM_HORIZON")
+  .option("awsAccessKey", awsAccessKeyId)
+  .option("awsSecretKey", awsSecretKey)
+  .load()
+
+
+// COMMAND ----------
+
+val result = kinesis.selectExpr("lcase(CAST(data as STRING)) as word")
+   .groupBy($"word")
+   .count()
+display(result)
+
+// COMMAND ----------
+
+// DBTITLE 1,Write to a Delta table
+kinesis.writeStream
+  .format("delta")
+  .option("checkpointLocation", "/tmp/kinesis-demo/_checkpoint")
+  .table("kinesisData")
